@@ -1,4 +1,4 @@
-package com.hackaton.simulacaocredito.models;
+package com.hackaton.simulacaocredito.models.postgres;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

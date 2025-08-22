@@ -1,4 +1,4 @@
-package com.hackaton.simulacaocredito.models;
+package com.hackaton.simulacaocredito.models.postgres;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -17,7 +17,7 @@ import java.time.LocalDate;
 public class Telemetria { 
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; 
 
     @Column(name = "NOME_API", nullable = false)

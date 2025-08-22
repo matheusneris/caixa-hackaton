@@ -2,8 +2,8 @@ package com.hackaton.simulacaocredito.services;
 
 import com.hackaton.simulacaocredito.dtos.responses.TelemetriaItemDto;
 import com.hackaton.simulacaocredito.dtos.responses.TelemetriaResponseDto;
-import com.hackaton.simulacaocredito.models.Telemetria;
-import com.hackaton.simulacaocredito.repositories.TelemetriaRepository;
+import com.hackaton.simulacaocredito.models.postgres.Telemetria;
+import com.hackaton.simulacaocredito.repositories.postgres.TelemetriaRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;

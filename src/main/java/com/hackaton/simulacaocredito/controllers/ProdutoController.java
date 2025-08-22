@@ -1,6 +1,5 @@
 package com.hackaton.simulacaocredito.controllers;
 
-import com.hackaton.simulacaocredito.models.Produto;
 import com.hackaton.simulacaocredito.services.ProdutoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,9 +19,4 @@ public class ProdutoController {
         return ResponseEntity.ok().body(produtoService.listarProdutos());
     }
 
-    @PostMapping("/salvar")
-    public ResponseEntity salvarProduto(@RequestBody Produto produto) {
-        produtoService.salvarProduto(produto);
-        return ResponseEntity.ok().build();
-    }
 }

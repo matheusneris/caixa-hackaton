@@ -1,4 +1,4 @@
-package com.hackaton.simulacaocredito.models;
+package com.hackaton.simulacaocredito.models.postgres;
 
 import com.hackaton.simulacaocredito.enums.TipoSimulacaoEnum;
 import jakarta.persistence.*;

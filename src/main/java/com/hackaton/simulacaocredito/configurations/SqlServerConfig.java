@@ -5,46 +5,46 @@ import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.*;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.*;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-/*@Configuration
-@EnableTransactionManagement
+@Configuration
 @EnableJpaRepositories(
         basePackages = "com.hackaton.simulacaocredito.repositories.sqlserver",
         entityManagerFactoryRef = "sqlServerEntityManagerFactory",
         transactionManagerRef = "sqlServerTransactionManager"
-)*/
+)
+@EnableConfigurationProperties
+@EnableTransactionManagement
 public class SqlServerConfig {
 
-   /* @Primary
-    @Bean(name = "sqlServerDataSource")
+    @Bean
     @ConfigurationProperties(prefix = "spring.datasource.sqlserver")
     public DataSource sqlServerDataSource() {
         return DataSourceBuilder.create().build();
     }
 
-    @Primary
-    @Bean(name = "sqlServerEntityManagerFactory")
+    @Bean
     public LocalContainerEntityManagerFactoryBean sqlServerEntityManagerFactory(
             EntityManagerFactoryBuilder builder,
-            @Qualifier("sqlServerDataSource") DataSource dataSource) {
+            @Qualifier("sqlServerDataSource") DataSource ds) {
+
         return builder
-                .dataSource(dataSource)
+                .dataSource(ds)
                 .packages("com.hackaton.simulacaocredito.models.sqlserver")
-                .persistenceUnit("sqlserver")
+                .persistenceUnit("sqlServerPU")
                 .build();
     }
 
-    @Primary
-    @Bean(name = "sqlServerTransactionManager")
+    @Bean
     public PlatformTransactionManager sqlServerTransactionManager(
-            @Qualifier("sqlServerEntityManagerFactory") EntityManagerFactory entityManagerFactory) {
-        return new JpaTransactionManager(entityManagerFactory);
-    }*/
+            @Qualifier("sqlServerEntityManagerFactory") EntityManagerFactory emf) {
+        return new JpaTransactionManager(emf);
+    }
 }
