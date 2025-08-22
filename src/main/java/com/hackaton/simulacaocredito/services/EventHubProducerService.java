@@ -23,7 +23,6 @@ public class EventHubProducerService {
     public void enviarSimulacao(Object payload) {
         try {
             String json = objectMapper.writeValueAsString(payload);
-            System.out.println("Enviando para Event Hub: " + json);
             EventDataBatch batch = producer.createBatch();
             batch.tryAdd(new EventData(json));
             producer.send(batch);

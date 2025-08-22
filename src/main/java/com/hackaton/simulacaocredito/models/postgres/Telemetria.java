@@ -14,11 +14,12 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Telemetria { 
+public class Telemetria {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; 
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "telemetria_seq")
+    @SequenceGenerator(name = "telemetria_seq", sequenceName = "telemetria_seq", allocationSize = 1)
+    private Long id;
 
     @Column(name = "NOME_API", nullable = false)
     private String nomeApi; 

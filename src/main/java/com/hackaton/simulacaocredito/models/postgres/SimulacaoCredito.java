@@ -1,6 +1,5 @@
 package com.hackaton.simulacaocredito.models.postgres;
 
-import com.hackaton.simulacaocredito.models.sqlserver.Produto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,7 +20,8 @@ import java.util.List;
 public class SimulacaoCredito {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "simulacao_credito_seq")
+    @SequenceGenerator(name = "simulacao_credito_seq", sequenceName = "simulacao_credito_seq", allocationSize = 1)
     private Long idSimulacao;
 
     @Column(name = "CO_PRODUTO", nullable = false)

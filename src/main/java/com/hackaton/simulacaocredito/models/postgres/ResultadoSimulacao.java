@@ -20,7 +20,8 @@ import java.util.List;
 public class ResultadoSimulacao {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "resultado_simulacao_seq")
+    @SequenceGenerator(name = "resultado_simulacao_seq", sequenceName = "resultado_simulacao_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -17,7 +17,8 @@ import java.math.BigDecimal;
 public class Parcela {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "parcela_seq")
+    @SequenceGenerator(name = "parcela_seq", sequenceName = "parcela_seq", allocationSize = 1)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
