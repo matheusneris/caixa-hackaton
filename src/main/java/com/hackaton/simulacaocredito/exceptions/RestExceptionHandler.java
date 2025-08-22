@@ -10,4 +10,9 @@ public class RestExceptionHandler {
     public String simulacaoSemProdutoCompativel(SimulacaoSemProdutoCompativelException ex) {
         return ex.getMessage();
     }
+
+    @ExceptionHandler(RuntimeException.class)
+    public String runtimeException(RuntimeException ex){
+        return ex.getMessage();
+    }
 }

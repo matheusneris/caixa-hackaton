@@ -30,11 +30,13 @@ public class SimulacaoCreditoService {
     private final SimulacaoCreditoRepository simulacaoRepository;
     private final ProdutoService produtoService;
     private final TelemetriaService telemetriaService;
+    private final EventHubProducerService eventHubService;
 
-    public SimulacaoCreditoService(SimulacaoCreditoRepository simulacaoRepository, ProdutoService produtoService, TelemetriaService telemetriaService) {
+    public SimulacaoCreditoService(SimulacaoCreditoRepository simulacaoRepository, ProdutoService produtoService, TelemetriaService telemetriaService, EventHubProducerService eventHubService) {
         this.simulacaoRepository = simulacaoRepository;
         this.produtoService = produtoService;
         this.telemetriaService = telemetriaService;
+        this.eventHubService = eventHubService;
     }
 
     @Transactional
@@ -53,16 +55,20 @@ public class SimulacaoCreditoService {
 
             simulacaoRepository.save(simulacaoCredito);
 
+            SimulacaoResponseDto responseDto = construirResponseNovaSimulacao(simulacaoCredito, produto, sac, price);
+
+            eventHubService.enviarSimulacao(responseDto);
+
             registrarTelemetria(start, "Simulação", 200);
 
-            return construirResponseNovaSimulacao(simulacaoCredito, produto, sac, price);
+            return responseDto;
 
         } catch (SimulacaoSemProdutoCompativelException ex){
             registrarTelemetria(start, "Simulação", 500);
             throw ex;
         } catch (Exception e){
             registrarTelemetria(start, "Simulação", 500);
-            return null;
+            throw new RuntimeException("Erro não esperado na simulação. Por favor, tente novamente.");
         }
     }
 
@@ -83,7 +89,7 @@ public class SimulacaoCreditoService {
 
         } catch (Exception e){
             registrarTelemetria(start, "Listar simulações", 500);
-            return null;
+            throw new RuntimeException("Erro não esperado. Por favor, tente novamente.");
         }
     }
 
@@ -105,7 +111,7 @@ public class SimulacaoCreditoService {
 
         } catch (Exception e) {
             registrarTelemetria(start, "Simulações por produto", 500);
-            return null;
+            throw new RuntimeException("Erro não esperado. Por favor, tente novamente.");
         }
     }
 
