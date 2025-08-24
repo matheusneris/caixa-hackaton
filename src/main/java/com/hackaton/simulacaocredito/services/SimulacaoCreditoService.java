@@ -4,12 +4,14 @@ import com.hackaton.simulacaocredito.dtos.requests.SimulacoesProdutosRequestDto;
 import com.hackaton.simulacaocredito.dtos.responses.*;
 import com.hackaton.simulacaocredito.dtos.requests.SimulacaoRequestDto;
 import com.hackaton.simulacaocredito.enums.TipoSimulacaoEnum;
+import com.hackaton.simulacaocredito.exceptions.ProdutoNaoEncontradoException;
 import com.hackaton.simulacaocredito.exceptions.SimulacaoSemProdutoCompativelException;
 import com.hackaton.simulacaocredito.models.postgres.Parcela;
 import com.hackaton.simulacaocredito.models.sqlserver.Produto;
 import com.hackaton.simulacaocredito.models.postgres.ResultadoSimulacao;
 import com.hackaton.simulacaocredito.models.postgres.SimulacaoCredito;
 import com.hackaton.simulacaocredito.repositories.postgres.SimulacaoCreditoRepository;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,8 +48,8 @@ public class SimulacaoCreditoService {
         try {
             Produto produto = produtoService.consultarProdutoParaSimulacao(request);
             SimulacaoCredito simulacaoCredito = criarSimulacaoCredito(request, produto);
-            ResultadoSimulacao sac = calcularSac(simulacaoCredito);
-            ResultadoSimulacao price = calcularPrice(simulacaoCredito);
+            ResultadoSimulacao sac = calcularSac(simulacaoCredito, produto);
+            ResultadoSimulacao price = calcularPrice(simulacaoCredito, produto);
 
             calcularTotParcelasEMediaPrestacaoSac(sac);
             calcularTotParcelasEMediaPrestacaoPrice(price);
@@ -58,7 +60,11 @@ public class SimulacaoCreditoService {
 
             SimulacaoResponseDto responseDto = construirResponseNovaSimulacao(simulacaoCredito, produto, sac, price);
 
-            eventHubService.enviarSimulacao(responseDto);
+            try {
+                eventHubService.enviarSimulacao(responseDto);
+            } catch (Exception e) {
+                System.out.println("Falha ao enviar simulação para Event Hub.");
+            }
 
             registrarTelemetria(start, "Simulação", 200);
 
@@ -118,10 +124,17 @@ public class SimulacaoCreditoService {
              * sempre pegando a que tem o menor valor final (entre SAC e PRICE), pois assumi que o cliente
              * vai preferir a modalidade que ele paga menos no final das contas.
              * */
+            List<Produto> todosProdutos = produtoService.listarProdutos();
+            Map<Long, Produto> produtosMap = todosProdutos.stream()
+                    .collect(Collectors.toMap(Produto::getCoProduto, p -> p));
             List<SimulacaoProdutoItemDto> itens = new ArrayList<>();
             for (Map.Entry<Long, List<SimulacaoCredito>> produtoSimulacoes : agrupadoPorProduto.entrySet()) {
-                Produto produto = produtoService.buscarPorId(produtoSimulacoes.getKey());
-                itens.add(criarItemProduto(produto, produtoSimulacoes.getValue()));
+                Produto produto = produtosMap.get(produtoSimulacoes.getKey());
+                if (produto != null) {
+                    itens.add(criarItemProduto(produto, produtoSimulacoes.getValue()));
+                } else {
+                    throw new ProdutoNaoEncontradoException(produtoSimulacoes.getKey());
+                }
             }
 
             registrarTelemetria(start, "Simulações por produto", 200);
@@ -175,9 +188,8 @@ public class SimulacaoCreditoService {
         );
     }
 
-    private ResultadoSimulacao calcularSac(SimulacaoCredito simulacao) {
+    private ResultadoSimulacao calcularSac(SimulacaoCredito simulacao, Produto produto) {
         BigDecimal saldoDevedor = simulacao.getValorDesejado();
-        Produto produto = produtoService.buscarPorId(simulacao.getCoProduto());
         BigDecimal taxaMensal = produto.getPcTaxaJuros();
         int prazo = simulacao.getPrazo();
         BigDecimal amortizacaoConstante = saldoDevedor.divide(BigDecimal.valueOf(prazo), 10, RoundingMode.HALF_UP);
@@ -210,9 +222,8 @@ public class SimulacaoCreditoService {
         }
     }
 
-    private ResultadoSimulacao calcularPrice(SimulacaoCredito simulacao) {
+    private ResultadoSimulacao calcularPrice(SimulacaoCredito simulacao, Produto produto) {
         BigDecimal saldoDevedor = simulacao.getValorDesejado();
-        Produto produto = produtoService.buscarPorId(simulacao.getCoProduto());
         BigDecimal taxaMensal = produto.getPcTaxaJuros();
         int prazo = simulacao.getPrazo();
 
@@ -275,11 +286,11 @@ public class SimulacaoCreditoService {
         );
     }
 
-    private SimulacaoProdutoItemDto criarItemProduto(Produto produto, List<SimulacaoCredito> simsProduto) {
-        BigDecimal somaDesejado = calcularSomaDesejado(simsProduto);
-        BigDecimal somaCredito = calcularSomaCredito(simsProduto);
-        BigDecimal taxaMedia = calcularTaxaMedia(simsProduto, somaDesejado);
-        BigDecimal valorMedioPrestacao = calcularValorMedioPrestacao(simsProduto);
+    private SimulacaoProdutoItemDto criarItemProduto(Produto produto, List<SimulacaoCredito> simulacoesProduto) {
+        BigDecimal somaDesejado = calcularSomaDesejado(simulacoesProduto);
+        BigDecimal somaCredito = calcularSomaCredito(simulacoesProduto);
+        BigDecimal taxaMedia = calcularTaxaMedia(simulacoesProduto, somaDesejado, produto);
+        BigDecimal valorMedioPrestacao = calcularValorMedioPrestacao(simulacoesProduto);
 
         return new SimulacaoProdutoItemDto(
                 produto.getCoProduto(),
@@ -306,16 +317,12 @@ public class SimulacaoCreditoService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private BigDecimal calcularTaxaMedia(List<SimulacaoCredito> simsProduto, BigDecimal somaDesejado) {
+    private BigDecimal calcularTaxaMedia(List<SimulacaoCredito> simulacoesProduto, BigDecimal somaDesejado, Produto produto) {
         if (somaDesejado.compareTo(BigDecimal.ZERO) == 0) return BigDecimal.ZERO;
 
-        BigDecimal somaPonderada = simsProduto.stream()
-                .map(sim -> {
-                    Produto produto = produtoService.buscarPorId(sim.getCoProduto());
-                    return produto.getPcTaxaJuros().multiply(sim.getValorDesejado());
-                })
+        BigDecimal somaPonderada = simulacoesProduto.stream()
+                .map(sim -> produto.getPcTaxaJuros().multiply(sim.getValorDesejado()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
 
         return somaPonderada.divide(somaDesejado, 6, RoundingMode.HALF_UP);
     }

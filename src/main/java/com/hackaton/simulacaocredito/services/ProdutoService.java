@@ -1,7 +1,6 @@
 package com.hackaton.simulacaocredito.services;
 
 import com.hackaton.simulacaocredito.dtos.requests.SimulacaoRequestDto;
-import com.hackaton.simulacaocredito.exceptions.ProdutoNaoEncontradoException;
 import com.hackaton.simulacaocredito.exceptions.SimulacaoSemProdutoCompativelException;
 import com.hackaton.simulacaocredito.models.sqlserver.Produto;
 import com.hackaton.simulacaocredito.repositories.sqlserver.ProdutoRepository;
@@ -22,12 +21,6 @@ public class ProdutoService {
     @Transactional
     public List<Produto> listarProdutos() {
         return repository.findAll();
-    }
-
-    @Transactional
-    public Produto buscarPorId(Long coProduto) {
-        return repository.findById(coProduto)
-                .orElseThrow(() -> new ProdutoNaoEncontradoException(coProduto));
     }
 
     public Produto consultarProdutoParaSimulacao(SimulacaoRequestDto request) {
