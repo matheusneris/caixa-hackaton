@@ -6,3 +6,12 @@
 * A "taxaMediaJuro" foi calculada de forma ponderada, considerando a taxa e o valor desejado de cada simulação.
 
 * O "valorTotalCredito" foi assumido que seria a soma de todas as parcelas de cada simulação, sempre pegando a que tem o menor valor final (entre SAC e PRICE), pois assumi que o cliente vai preferir a modalidade que ele paga menos no final das contas.
+
+# Para rodar o projeto:
+
+* Rode os seguintes comandos na raiz do projeto:
+  * ./mvnw clean package -DskipTests
+  * docker compose build
+  * docker compose up -d
+
+*  Se eu mandasse o zip do projeto com o .jar gerado iria ultrapassar o tamanho de 2MB permitido para o tamanho do arquivo.
