@@ -1,6 +1,6 @@
-package com.hackaton.simulacaocredito.repositories;
+package com.hackaton.simulacaocredito.repositories.postgres;
 
-import com.hackaton.simulacaocredito.models.Telemetria;
+import com.hackaton.simulacaocredito.models.postgres.Telemetria;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

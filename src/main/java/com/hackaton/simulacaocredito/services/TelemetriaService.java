@@ -2,8 +2,8 @@ package com.hackaton.simulacaocredito.services;
 
 import com.hackaton.simulacaocredito.dtos.responses.TelemetriaItemDto;
 import com.hackaton.simulacaocredito.dtos.responses.TelemetriaResponseDto;
-import com.hackaton.simulacaocredito.models.Telemetria;
-import com.hackaton.simulacaocredito.repositories.TelemetriaRepository;
+import com.hackaton.simulacaocredito.models.postgres.Telemetria;
+import com.hackaton.simulacaocredito.repositories.postgres.TelemetriaRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -28,7 +28,7 @@ public class TelemetriaService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void registrar(String nomeApi, long tempoMs, int status) { 
         Telemetria registro = new Telemetria(); 
-        registro.setNomeApi(nomeApi); 
+        registro.setNomeEndPoint(nomeApi);
         registro.setTempoResposta(tempoMs); 
         registro.setStatus(status); 
         registro.setDataReferencia(LocalDate.now()); 
@@ -39,12 +39,12 @@ public class TelemetriaService {
     public TelemetriaResponseDto listarPorData(LocalDate data) { 
         List<Telemetria> registros = repository.findByDataReferencia(data); 
 
-        Map<String, List<Telemetria>> grouped = registros.stream() 
-                .collect(Collectors.groupingBy(Telemetria::getNomeApi)); 
+        Map<String, List<Telemetria>> listaEndPoints = registros.stream() 
+                .collect(Collectors.groupingBy(Telemetria::getNomeEndPoint));
 
-        List<TelemetriaItemDto> lista = grouped.entrySet().stream() 
-                .map(entry -> { 
-                    List<Telemetria> itens = entry.getValue(); 
+        List<TelemetriaItemDto> lista = listaEndPoints.entrySet().stream() 
+                .map(endPoint -> {
+                    List<Telemetria> itens = endPoint.getValue();
                     long qtd = itens.size(); 
                     long tempoMin = itens.stream().mapToLong(Telemetria::getTempoResposta).min().orElse(0); 
                     long tempoMax = itens.stream().mapToLong(Telemetria::getTempoResposta).max().orElse(0); 
@@ -55,7 +55,7 @@ public class TelemetriaService {
                             itens.stream().filter(t -> t.getStatus() == 200).count() 
                     ).divide(BigDecimal.valueOf(qtd), 2, RoundingMode.HALF_UP); 
 
-                    return new TelemetriaItemDto(entry.getKey(), qtd, tempoMedio, tempoMin, tempoMax, percentualSucesso); 
+                    return new TelemetriaItemDto(endPoint.getKey(), qtd, tempoMedio, tempoMin, tempoMax, percentualSucesso);
                 }) 
                 .toList(); 
 

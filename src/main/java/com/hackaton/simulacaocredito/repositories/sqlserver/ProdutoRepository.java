@@ -1,6 +1,6 @@
-package com.hackaton.simulacaocredito.repositories;
+package com.hackaton.simulacaocredito.repositories.sqlserver;
 
-import com.hackaton.simulacaocredito.models.Produto;
+import com.hackaton.simulacaocredito.models.sqlserver.Produto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

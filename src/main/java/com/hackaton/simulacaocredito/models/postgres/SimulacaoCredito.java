@@ -1,4 +1,4 @@
-package com.hackaton.simulacaocredito.models;
+package com.hackaton.simulacaocredito.models.postgres;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -20,12 +20,12 @@ import java.util.List;
 public class SimulacaoCredito {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "simulacao_credito_seq")
+    @SequenceGenerator(name = "simulacao_credito_seq", sequenceName = "simulacao_credito_seq", allocationSize = 1)
     private Long idSimulacao;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "CO_PRODUTO")
-    private Produto produto;
+    @Column(name = "CO_PRODUTO", nullable = false)
+    private Long coProduto;
 
     @Column(name = "VALOR_DESEJADO", precision = 15, scale = 2, nullable = false)
     private BigDecimal valorDesejado;
@@ -39,4 +39,3 @@ public class SimulacaoCredito {
     @Column(name = "DATA_SIMULACAO", nullable = false)
     private LocalDate dataSimulacao;
 }
-

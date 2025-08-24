@@ -11,6 +11,11 @@ public class RestExceptionHandler {
         return ex.getMessage();
     }
 
+    @ExceptionHandler(ProdutoNaoEncontradoException.class)
+    public String produtoNaoEncontrado(ProdutoNaoEncontradoException ex) {
+        return ex.getMessage();
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public String runtimeException(RuntimeException ex){
         return ex.getMessage();

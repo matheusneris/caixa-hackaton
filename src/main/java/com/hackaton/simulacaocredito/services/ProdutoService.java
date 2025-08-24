@@ -1,7 +1,10 @@
 package com.hackaton.simulacaocredito.services;
 
-import com.hackaton.simulacaocredito.models.Produto;
-import com.hackaton.simulacaocredito.repositories.ProdutoRepository;
+import com.hackaton.simulacaocredito.dtos.requests.SimulacaoRequestDto;
+import com.hackaton.simulacaocredito.exceptions.ProdutoNaoEncontradoException;
+import com.hackaton.simulacaocredito.exceptions.SimulacaoSemProdutoCompativelException;
+import com.hackaton.simulacaocredito.models.sqlserver.Produto;
+import com.hackaton.simulacaocredito.repositories.sqlserver.ProdutoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,12 +19,24 @@ public class ProdutoService {
         this.repository = repository;
     }
 
+    @Transactional
     public List<Produto> listarProdutos() {
         return repository.findAll();
     }
 
     @Transactional
-    public void salvarProduto(Produto produto){
-        repository.save(produto);
+    public Produto buscarPorId(Long coProduto) {
+        return repository.findById(coProduto)
+                .orElseThrow(() -> new ProdutoNaoEncontradoException(coProduto));
+    }
+
+    public Produto consultarProdutoParaSimulacao(SimulacaoRequestDto request) {
+        return listarProdutos().stream()
+                .filter(p -> request.prazo() >= p.getNuMinimoMeses()
+                        && (p.getNuMaximoMeses() == null || request.prazo() <= p.getNuMaximoMeses())
+                        && request.valorDesejado().compareTo(p.getVrMinimo()) >= 0
+                        && (p.getVrMaximo() == null || request.valorDesejado().compareTo(p.getVrMaximo()) <= 0))
+                .findFirst()
+                .orElseThrow(SimulacaoSemProdutoCompativelException::new);
     }
 }

@@ -1,4 +1,4 @@
-package com.hackaton.simulacaocredito.models;
+package com.hackaton.simulacaocredito.models.postgres;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -14,14 +14,15 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Telemetria { 
+public class Telemetria {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id; 
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "telemetria_seq")
+    @SequenceGenerator(name = "telemetria_seq", sequenceName = "telemetria_seq", allocationSize = 1)
+    private Long id;
 
-    @Column(name = "NOME_API", nullable = false)
-    private String nomeApi; 
+    @Column(name = "NOME_END_POINT", nullable = false)
+    private String nomeEndPoint;
 
     @Column(name = "TEMPO_RESPOSTA_MS", nullable = false)
     private Long tempoResposta; 
